@@ -19,4 +19,4 @@ SELECT flight_date::DATE
         ,(distance / 0.621371)::NUMERIC(6,2) AS distance_km -- see instruction hint
         ,cancelled
         ,diverted
-FROM {{source('filtered_flights')}}
+FROM {{source('flights_data', 'filtered_flights')}}
