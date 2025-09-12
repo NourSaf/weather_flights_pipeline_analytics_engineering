@@ -1,29 +1,31 @@
-WITH hourly_data AS (
-  SELECT * 
-  FROM {{ref('staging_weather_hourly')}}
+WITH 
+hourly_data AS (
+    SELECT * 
+    FROM {{ref('staging_weather_hourly')}}
+), 
+add_time_features AS (
+    SELECT  
+        *, 
+        timestamp::DATE AS date,
+        timestamp::TIME AS time,
+        TO_CHAR(timestamp,'HH24:MI') AS hour,
+        TO_CHAR(timestamp, 'FMmonth') AS month_name,
+        TO_CHAR(timestamp::DATE, 'day') AS weekday,
+        DATE_PART('day', timestamp) AS date_day,
+        DATE_PART('month', timestamp) AS date_month,
+        DATE_PART('year', timestamp) AS date_year,
+        DATE_PART('week', timestamp) AS cw
+    FROM hourly_data
 ),
-add_features AS (
-  SELECT *
-    , timestamp::DATE AS date -- only date (year-month-day) as DATE data type
-    , timestamp::TIME AS time -- only time (hours:minutes:seconds) as TIME data type
-    , TO_CHAR(timestamp,'HH24:MI') as hour -- time (hours:minutes) as TEXT data type
-    , TO_CHAR(timestamp, 'FMmonth') AS month_name -- month name as a TEXT
-    , TO_CHAR(timestamp, 'FMday') AS weekday    -- weekday name as TEXT      
-    , DATE_PART('day', timestamp) AS date_day
-    , DATE_PART('month', timestamp) AS date_month
-    , DATE_PART('year', timestamp) AS date_year
-    , DATE_PART('week', timestamp) AS cw
-  FROM hourly_data
-),
-add_more_features AS (
-  SELECT *
-    ,(CASE 
-        WHEN time BETWEEN '00:00:00' AND '05:59:00' THEN 'night'
-        WHEN time BETWEEN '06:00:00' AND '18:00:00' THEN 'day'
-        WHEN time BETWEEN '18:00:00' AND '23:59:00' THEN 'evening'
-    END) AS day_part
-  FROM add_features
+date_case AS (
+    SELECT 
+        * ,
+        (CASE
+            WHEN hour BETWEEN '00:00' AND '08:00' THEN 'Night'
+            WHEN hour BETWEEN '08:00' AND '16:00' THEN 'Day'
+            ELSE 'Evening'
+            END
+        ) AS day_part
+    FROM add_time_features
 )
-SELECT *
-FROM add_more_features
-ORDER BY date
+SELECT * FROM date_case

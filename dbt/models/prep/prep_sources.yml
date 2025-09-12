@@ -1,0 +1,8 @@
+version: 2 
+sources:
+
+- name: flights_data
+  schema: clear_skies
+  tables:
+    - name: all_flights
+    - name: filtered_flights
