@@ -11,7 +11,44 @@ SELECT
     * 
 FROM prep_flights;
 
-SELECT * FROM prep_weather_hourly
+WITH 
+weather_hourly_selected AS ( -- execluding the null colmuns. 
+    SELECT
+        airport_code, 
+        station_id,
+        timestamp AS sensor_ts,
+        date AS sensor_date,
+        hour::TIME AS sensor_hour, 
+        month_name,
+        weekday AS sensory_day,
+        day_part,
+        temp_c,
+        dewpoint_c,
+        humidity_perc,
+        precipitation_mm,
+        wind_direction,
+        wind_speed_kmh,
+        pressure_hpa
+    FROM prep_weather_hourly
+    ORDER BY date, hour
+)
+SELECT
+    *
+FROM weather_hourly_selected w
+LEFT JOIN prep_flights p
+ON w.airport_code = p.origin
+
+SELECT * FROM prep_flights;
+
+SELECT
+    *,
+    TO_CHAR(DATE_PART('hour', dep_time), 'fm0000')::TIME AS sched_dep_time
+FROM prep_flights
+
+SELECT * FROM prep_weather_hourly;
 
 -- THE QUESTION IF I want to join the hour in weather is a complete hour 
--- The hour in flights sometimes we have 1.30 1.32 
+-- The hour in flights sometimes we have 1.30 1.32
+-- Using linear Interpolation 
+SELECT COUNT(*) FROM prep_weather_hourly;
+SELECT * FROM prep_weather_hourly WHERE pressure_hpa IS NULL;
